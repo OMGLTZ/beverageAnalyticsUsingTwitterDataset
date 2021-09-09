@@ -105,7 +105,7 @@ df_lang_tmp = df_lang_per.sort_values(['lang'], ascending=[0])
 df_tmp = df_notnull.groupby(['lang', 'drink_type'], as_index=False).sum().sort_values(['lang'], ascending=[0])
 df_lang_drink = pd.merge(df_lang_tmp, df_tmp, how='right', on='lang').drop(['lang_num', 'percentage'], axis=1)
 df_lang_drink['percentage'] = df_lang_drink['count'] / df_lang_drink['num']
-df_lang_drink = df_lang_drink[['lang', 'drink_type', 'count', 'num', 'percentage']]         .sort_values(['drink_type', 'percentage'], ascending=[0, 0])
+df_lang_drink = df_lang_drink[['lang', 'drink_type', 'count', 'num', 'percentage']].sort_values(['drink_type', 'percentage'], ascending=[0, 0])
 df_lang_drink
 
 
@@ -119,7 +119,7 @@ df_hour_notnull = df_hour_notnull.astype({'utc_offset': 'int32', 'hour': 'int32'
 df_hour_notnull['utc_os_hour'] = np.floor(df_hour_notnull['utc_offset'] / 3600)
 df_hour_notnull['true_hour'] = (df_hour_notnull['hour'] + df_hour_notnull['utc_os_hour']) % 24
 df_hour_notnull = df_hour_notnull.astype({'true_hour': 'int32'})
-df_hour_notnull = df_hour_notnull[['drink_type', 'true_hour', 'count']].groupby(['drink_type', 'true_hour'], as_index=False)         .sum().sort_values(['drink_type', 'true_hour'], ascending=[0, 1])
+df_hour_notnull = df_hour_notnull[['drink_type', 'true_hour', 'count']].groupby(['drink_type', 'true_hour'], as_index=False).sum().sort_values(['drink_type', 'true_hour'], ascending=[0, 1])
 df_hour_notnull
 
 
@@ -143,7 +143,7 @@ df_hour
 # compute the percentage of tweets mentioned different drink type in a day
 df_hour_per = pd.merge(df_hour_notnull, df_hour, how='inner', on='true_hour')
 df_hour_per['percentage'] = df_hour_per['count_x'] / df_hour_per['count_y']
-df_hour_per = df_hour_per[['drink_type', 'true_hour', 'percentage']].groupby(['drink_type', 'true_hour'], as_index=False)         .sum().sort_values(['drink_type', 'true_hour'], ascending=[0, 1])
+df_hour_per = df_hour_per[['drink_type', 'true_hour', 'percentage']].groupby(['drink_type', 'true_hour'], as_index=False).sum().sort_values(['drink_type', 'true_hour'], ascending=[0, 1])
 df_hour_per
 
 
