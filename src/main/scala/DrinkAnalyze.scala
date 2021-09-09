@@ -50,6 +50,11 @@ class DrinkAnalyze extends scala.Serializable {
   /**
    * process tweets to final format:
    * ((drinkType, language, time, time_offset), counts)
+   *
+   * Map findDrink(Tweet) to DrinkRecord,
+   * filter records which does not contains drink
+   * if one tweet mentions more than one type of drink, then flatMap it
+   * finally, reduce records by key.
    * @param tweets tweets from json file
    * @return results to save and process by python
    */
@@ -58,9 +63,6 @@ class DrinkAnalyze extends scala.Serializable {
 
     import spark.implicits._
 
-    // filter records which does not contains drink
-    // if one tweet mentions more than one type of drink, then flatMap it
-    // finally, reduce records by key.
     val res: RDD[((String, String, String, Int), Int)] = tweets.map(findDrink)
       .filter(r => {r.drinkCounts.nonEmpty})
       .map(r => {
