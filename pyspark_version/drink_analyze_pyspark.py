@@ -81,7 +81,7 @@ json_log = sqlContext.read.json("/data/ProjectDatasetTwitter/statuses.log.2014-1
 
 
 # filter the language
-log_lang = json_log.select('text', 'lang', 'created_at', 'user.utc_offset')                    .filter((json_log.lang == "en") | (json_log.lang == "it") | 
+log_lang = json_log.select('text', 'lang', 'created_at', 'user.utc_offset').filter((json_log.lang == "en") | (json_log.lang == "it") | 
                            (json_log.lang == "es") | (json_log.lang == "pt") | 
                            (json_log.lang == "fr") | (json_log.lang == "in") | 
                            (json_log.lang == "tr") | (json_log.lang == "ru") | 
@@ -92,14 +92,14 @@ log_lang = json_log.select('text', 'lang', 'created_at', 'user.utc_offset')     
 
 
 # process the text and hour dimension
-log_split = log_lang.withColumn('text_lower', F.lower(F.col('text')))                     .withColumn('text_split', F.split('text_lower', ' '))                     .withColumn('created_at_split', F.split('created_at', ' ')[3])                     .withColumn('hour', F.split('created_at_split', ':')[0])                     .select('text', 'lang', 'utc_offset', 'text_split', 'hour')
+log_split = log_lang.withColumn('text_lower', F.lower(F.col('text'))).withColumn('text_split', F.split('text_lower', ' ')).withColumn('created_at_split', F.split('created_at', ' ')[3]).withColumn('hour', F.split('created_at_split', ':')[0]).select('text', 'lang', 'utc_offset', 'text_split', 'hour')
 
 
 # In[8]:
 
 
 # using mapping UDF to count drinks
-log_map_word = log_split.withColumn("drink_types", mapDrinkUDF(F.col("text_split"), F.col("lang")))                         .withColumn('drink_type_split', F.split('drink_types', ','))                         .select('lang', 'utc_offset', 'hour', 'drink_types', 'drink_type_split')
+log_map_word = log_split.withColumn("drink_types", mapDrinkUDF(F.col("text_split"), F.col("lang"))).withColumn('drink_type_split', F.split('drink_types', ',')).select('lang', 'utc_offset', 'hour', 'drink_types', 'drink_type_split')
 
 
 # In[9]:
