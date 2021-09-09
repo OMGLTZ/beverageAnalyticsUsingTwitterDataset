@@ -1,6 +1,6 @@
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
-import util.{DrinkRecord, PrepareForAnalysis, Twitter}
+import util.{DrinkRecord, PrepareForAnalysis, Tweet}
 
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.mutable
@@ -11,13 +11,13 @@ class DrinkAnalyze extends scala.Serializable {
   val spark: SparkSession = PrepareForAnalysis.spark
 
   // register the findDrink function
-  spark.udf.register[DrinkRecord, Twitter]("findDrink", findDrink)
+  spark.udf.register[DrinkRecord, Tweet]("findDrink", findDrink)
 
   // map from lang to drinkMap
   val drinkLangs: HashMap[String, HashMap[String, HashSet[String]]] =
     PrepareForAnalysis.drinkLangs
 
-  def findDrink(twitte: Twitter): DrinkRecord = {
+  def findDrink(twitte: Tweet): DrinkRecord = {
     val drinks: HashMap[String, HashSet[String]] = drinkLangs(twitte.lang)
     val drinkCounts = new mutable.HashMap[String, Int]
 
@@ -30,12 +30,13 @@ class DrinkAnalyze extends scala.Serializable {
       }
     }
 
+    // create DrinkRecord for every match
     val record: DrinkRecord = DrinkRecord(drinkCounts, twitte.lang,
       twitte.created_time, twitte.offset)
     record
   }
 
-  def calculate(twittes: Dataset[Twitter]):
+  def calculate(twittes: Dataset[Tweet]):
     RDD[((String, String, String, Int), Int)] = {
     import spark.implicits._
 
@@ -59,7 +60,7 @@ class DrinkAnalyze extends scala.Serializable {
 object DrinkAnalyze {
   def main(args: Array[String]): Unit = {
     val analyze = new DrinkAnalyze
-    val twittes: Dataset[Twitter] = PrepareForAnalysis.readJson("1")
+    val twittes: Dataset[Tweet] = PrepareForAnalysis.readJson("1")
     val results: RDD[((String, String, String, Int), Int)] = analyze.calculate(twittes)
     results.collect().foreach(println)
   }

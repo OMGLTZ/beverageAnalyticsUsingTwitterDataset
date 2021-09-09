@@ -2,14 +2,14 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
-import util.{DrinkRecord, PrepareForAnalysis, Twitter}
+import util.{DrinkRecord, PrepareForAnalysis, Tweet}
 
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 class DrinkAnalyzeBroad(sc: SparkContext, spark: SparkSession) extends scala.Serializable {
 
-  spark.udf.register[DrinkRecord, Twitter]("findDrink", findDrink)
+  spark.udf.register[DrinkRecord, Tweet]("findDrink", findDrink)
 
   private val drinkEn: Broadcast[HashMap[String, HashSet[String]]] = sc.broadcast(PrepareForAnalysis.drinkEn)
 
@@ -20,7 +20,7 @@ class DrinkAnalyzeBroad(sc: SparkContext, spark: SparkSession) extends scala.Ser
     "es" -> drinkEs
   )
 
-  def findDrink(twitte: Twitter): DrinkRecord = {
+  def findDrink(twitte: Tweet): DrinkRecord = {
     val drinks: Broadcast[HashMap[String, HashSet[String]]] = drinkLangs(twitte.lang)
     val drinkCounts = new mutable.HashMap[String, Int]
 
@@ -38,7 +38,7 @@ class DrinkAnalyzeBroad(sc: SparkContext, spark: SparkSession) extends scala.Ser
 
   }
 
-  def calculate(twittes: Dataset[Twitter]): RDD[((String, String, String, Int), Int)] = {
+  def calculate(twittes: Dataset[Tweet]): RDD[((String, String, String, Int), Int)] = {
     import spark.implicits._
 
     val res: RDD[((String, String, String, Int), Int)] = twittes.map(findDrink).filter(r => {
@@ -66,7 +66,7 @@ object DrinkAnalyzeBroad {
     val spark: SparkSession = PrepareForAnalysis.spark
 
     val analyze = new DrinkAnalyzeBroad(sc, spark)
-    val twittes: Dataset[Twitter] = PrepareForAnalysis.readJson("1")
+    val twittes: Dataset[Tweet] = PrepareForAnalysis.readJson("1")
     val results: RDD[((String, String, String, Int), Int)] = analyze.calculate(twittes)
     results.collect().foreach(println)
   }

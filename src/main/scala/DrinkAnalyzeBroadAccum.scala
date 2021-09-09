@@ -2,14 +2,14 @@ import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.util.AccumulatorV2
 import org.apache.spark.{SparkConf, SparkContext}
-import util.{DrinkRecord, PrepareForAnalysis, Twitter}
+import util.{DrinkRecord, PrepareForAnalysis, Tweet}
 
 import scala.collection.immutable.{HashMap, HashSet}
 import scala.collection.mutable
 
 class DrinkAnalyzeBroadAccum(sc: SparkContext, spark: SparkSession) extends scala.Serializable {
 
-  spark.udf.register[DrinkRecord, Twitter]("findDrink", findDrink)
+  spark.udf.register[DrinkRecord, Tweet]("findDrink", findDrink)
 
   private val drinkEn: Broadcast[HashMap[String, HashSet[String]]] = sc.broadcast(PrepareForAnalysis.drinkEn)
 
@@ -22,7 +22,7 @@ class DrinkAnalyzeBroadAccum(sc: SparkContext, spark: SparkSession) extends scal
     "es" -> drinkEs
   )
 
-  def findDrink(twitte: Twitter): DrinkRecord = {
+  def findDrink(twitte: Tweet): DrinkRecord = {
     val drinks: Broadcast[HashMap[String, HashSet[String]]] = drinkLangs(twitte.lang)
     val drinkCounts = new mutable.HashMap[String, Int]
 
@@ -38,7 +38,7 @@ class DrinkAnalyzeBroadAccum(sc: SparkContext, spark: SparkSession) extends scal
     DrinkRecord(drinkCounts, twitte.lang, twitte.created_time, twitte.offset)
   }
 
-  def calculate(sc: SparkContext, twittes: Dataset[Twitter]): mutable.Map[(String, String, String, Int), Int] = {
+  def calculate(sc: SparkContext, twittes: Dataset[Tweet]): mutable.Map[(String, String, String, Int), Int] = {
     import spark.implicits._
 
     val tmp: Dataset[DrinkRecord] = twittes.map(findDrink)
@@ -98,7 +98,7 @@ object DrinkAnalyzeBroadAccum {
     val spark: SparkSession = PrepareForAnalysis.spark
 
     val analyze = new DrinkAnalyzeBroadAccum(sc, spark)
-    val twittes: Dataset[Twitter] = PrepareForAnalysis.readJson("1")
+    val twittes: Dataset[Tweet] = PrepareForAnalysis.readJson("1")
     val results: mutable.Map[(String, String, String, Int), Int] = analyze.calculate(sc, twittes)
     println(results)
   }
