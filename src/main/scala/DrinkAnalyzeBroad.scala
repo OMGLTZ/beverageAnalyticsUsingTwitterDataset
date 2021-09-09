@@ -26,7 +26,8 @@ class DrinkAnalyzeBroad(sc: SparkContext, spark: SparkSession)
     sc.broadcast(PrepareForAnalysis.drinkEs)
 
   // map from language to drinkMap
-  private val drinkLangs: HashMap[String, Broadcast[HashMap[String, HashSet[String]]]] =
+  private val drinkLangs: HashMap[String,
+    Broadcast[HashMap[String, HashSet[String]]]] =
     HashMap[String, Broadcast[HashMap[String, HashSet[String]]]](
     "en" -> drinkEn,
     "es" -> drinkEs
@@ -68,7 +69,7 @@ class DrinkAnalyzeBroad(sc: SparkContext, spark: SparkSession)
    * @param tweets tweets from json file
    * @return results to save and process by python
    */
-  def calculate(tweets: Dataset[Tweet]): RDD[((String, String, String, Int), Int)] = {
+  def calculateResults(tweets: Dataset[Tweet]): RDD[((String, String, String, Int), Int)] = {
     import spark.implicits._
 
     val res: RDD[((String, String, String, Int), Int)] = tweets.map(findDrink)
@@ -99,7 +100,7 @@ object DrinkAnalyzeBroad {
     val analyze = new DrinkAnalyzeBroad(sc, spark)
     val tweets: Dataset[Tweet] = PrepareForAnalysis.readJson("1")
     val results: RDD[((String, String, String, Int), Int)] =
-      analyze.calculate(tweets)
+      analyze.calculateResults(tweets)
     results.collect().foreach(println)
 
     // results should be saved in file system for analyze results
